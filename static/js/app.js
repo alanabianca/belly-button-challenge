@@ -5,7 +5,7 @@ const dataPromise = d3.json(url);
 
 //First data promise:
 dataPromise.then(function(data){
-    console.log("Data Promise: Resolved: ", data);
+    //console.log("Data Promise: Resolved: ", data);
 
     // Populate the dropdown menu using the names array
     var dropdown = d3.select("#dropdown");
@@ -14,21 +14,9 @@ dataPromise.then(function(data){
         dropdown.append("option").text(name).attr("value", name);
     });
 
-    //Grab the correct data to send to the bar graph
+    //Initialize the graphs for the first sample
     var nameSelect = "940";
-    var currentSample = data.samples.find(sample => sample.id === nameSelect);
-
-    //This will select the largest 10 numbers for the values
-    var otuIds = currentSample.otu_ids;
-    var yvalues = otuIds.slice(0,10);
-
-    var sampleValues = currentSample.sample_values;
-    var xvalues = sampleValues.slice(0,10);
-
-    var otuLabels = currentSample.otu_labels;
-    var SlicedNames = otuLabels.slice(0, 10);
-    barGraph(xvalues, yvalues, SlicedNames);
-    bubbleChart(otuIds, sampleValues, otuLabels);
+    updateCharts(data, nameSelect)
 });
 
 //Make the bar graph
@@ -46,7 +34,7 @@ function barGraph(xvalues, yvalues, SlicedNames){
     };
     let data = [trace1];
     let layout = {
-        title: "Alana's Bar Chart"
+        title: "Top 10 Sample Values"
     };
     Plotly.newPlot("barplot", data, layout);
 }
@@ -66,7 +54,7 @@ function bubbleChart(otuIds, sampleValues, otuLabels){
     var data = [trace1];
     
     var layout = {
-        title: "Alana's Bubble Chart",
+        title: "Sample Readings",
         showlegend: false,
         height: 600,
         width: 1000,
@@ -91,26 +79,51 @@ function updatePlotly(data) {
     let dropdownMenu = d3.select("#dropdown");
     // Assign the value of the dropdown menu option to a variable
     let dataset = dropdownMenu.property("value");
-    findValues(data, dataset);
+    updateCharts(data, dataset);
 }
 
 //Here's the function that finds our values:
-function findValues(data, dataset){
+function updateCharts(data, dataset){
     var nameSelect = dataset;
     var currentSample = data.samples.find(sample => sample.id === nameSelect);
+    var demoSample = data.metadata.find(item => item.id === parseInt(nameSelect));
 
-    //This will select the largest 10 numbers for the values
+    //This will select the largest 10 numbers for the otuIds
     var otuIds = currentSample.otu_ids;
-    var SlicedValues = otuIds.slice(0,10);
-    var yvalues = SlicedValues.map(function(number){
-        return "OTU " + number.toString();
-    });
-
+    var yvalues = otuIds.slice(0,10);
+    // var yvalues = SlicedValues.map(function(number){
+    //     return "OTU " + number.toString();
+    // });
+    //This will select the largest 10 numbers for the sampleValues
     var sampleValues = currentSample.sample_values;
     var xvalues = sampleValues.slice(0,10);
 
     var otuLabels = currentSample.otu_labels;
     var SlicedNames = otuLabels.slice(0, 10);
+
     barGraph(xvalues, yvalues, SlicedNames)
     bubbleChart(otuIds, sampleValues, otuLabels);
+    demoPanel(demoSample);
 }
+
+// Function to populate the panel with demographic information
+function demoPanel(data) {
+    // Select the panel-body
+    const panelBody = d3.select('#sample-metadata');
+    
+    // Clear existing content
+    panelBody.selectAll('p').remove();  
+    
+    // Bind data to panel content
+    const info = panelBody.selectAll('p').data(Object.entries(data));
+  
+    // Enter new content
+    const newInfo = info.enter().append('p');
+  
+    // Add content with data
+    newInfo
+      .html(d => `<strong>${d[0]}:</strong> ${d[1]}`);
+  
+    // Remove extra content if data is reduced
+    info.exit().remove();
+  }
