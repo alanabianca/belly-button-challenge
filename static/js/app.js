@@ -5,7 +5,7 @@ const dataPromise = d3.json(url);
 
 //First data promise:
 dataPromise.then(function(data){
-    //console.log("Data Promise: Resolved: ", data);
+    console.log("Data Promise: Resolved: ", data);
 
     // Populate the dropdown menu using the names array
     var dropdown = d3.select("#dropdown");
@@ -82,7 +82,7 @@ function updatePlotly(data) {
     updateCharts(data, dataset);
 }
 
-//Here's the function that finds our values:
+//Here's the function that updates all charts:
 function updateCharts(data, dataset){
     var nameSelect = dataset;
     var currentSample = data.samples.find(sample => sample.id === nameSelect);
@@ -91,9 +91,7 @@ function updateCharts(data, dataset){
     //This will select the largest 10 numbers for the otuIds
     var otuIds = currentSample.otu_ids;
     var yvalues = otuIds.slice(0,10);
-    // var yvalues = SlicedValues.map(function(number){
-    //     return "OTU " + number.toString();
-    // });
+
     //This will select the largest 10 numbers for the sampleValues
     var sampleValues = currentSample.sample_values;
     var xvalues = sampleValues.slice(0,10);
